@@ -7,3 +7,4 @@ Team Members
 ====
 
 - **@wooorm** - [Titus Wormer](mailto:tituswormer@gmail.com)
+- **@PJaYOfficial**- [Pieter Jannick Dijkstra](mailto:pieterjannick@gmail.com)
