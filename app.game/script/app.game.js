@@ -1,10 +1,19 @@
-(
+	(
 	function ( $ )
 	{
 		window.exports || ( window.exports = {} );
 
+		JSON.isJSON = function isJSON( string )
+		{
+			try
+			{
+				return JSON.parse( string );
+			}
+			catch (e) { return };
+		}
+
 		// Raw data.
-		var sets = [
+		var sets = JSON.isJSON( localStorage.getItem( 'collection.models' ) ) || [
 			  { 'set': 1, 'team1' : 'Boomsquad', 'team1Score' : 4, 'team2' : 'Burning Snow', 'team2Score' : 1 }
 			, { 'set': 2, 'team1' : 'Boomsquad', 'team1Score' : 3, 'team2' : 'Burning Snow', 'team2Score' : 4 }
 			, { 'set': 3, 'team1' : 'Boomsquad', 'team1Score' : 0, 'team2' : 'Burning Snow', 'team2Score' : 4 }
@@ -20,8 +29,14 @@
 			return it.get( comparator.type ) * comparator.order;
 		};
 
-		comparator.order = 1;
-		comparator.type = 'set';
+		// Get comparator data from LocalStorage.
+		comparator.order = +localStorage.getItem( 'comparator.order' ) || 1;
+		comparator.type = localStorage.getItem( 'comparator.type' ) || 'set';
+
+		// Set Select and Checkbox value based on comparator variables.
+		document.querySelector( '#sort' ).value = comparator.type;
+		document.querySelector( '#sort_order' ).checked = comparator.order > 0;
+
 
 		// Create new `Game` collection.
 		var Game = Backbone.Collection.extend(
@@ -57,7 +72,22 @@
 				, 'result_el' : document.querySelector( '.result_list' )
 				, 'initialize' : function initialize()
 				{
+					var _this = this;
 					this.collection = new Game( sets );
+
+					this.collection.bind( 'add', function callback( model, models )
+						{
+							_this.renderResults( true );
+							_this.renderSet( model, true );
+						}
+					);
+
+					this.collection.bind( 'remove', function callback( model, models )
+						{
+							_this.renderResults( true );
+						}
+					);
+
 					this.render();
 				}
 				, 'render' : function render()
@@ -86,13 +116,16 @@
 						, this
 					);
 				}
-				, 'renderResults' : function renderResults()
+				, 'renderResults' : function renderResults( rerender )
 				{
 					var resultView = new ResultView(
 						{
 							'model' : this.cleanResults( this.collection.models )
 						}
 					);
+
+					if ( rerender )
+						this.result_el.innerHTML = '';
 
 					this.result_el.appendChild( resultView.render().el );
 				}
@@ -124,49 +157,68 @@
 					return model;
 				}
 				, 'setViews' : []
-				, 'renderSet' : function render( model )
+				, 'renderSet' : function render( model, prepend )
 				{
 					var obj = model.toJSON();
 					el = document.createElement( 'tr' );
 					el.dataset.cid = model.cid;
 					el.innerHTML = [ '<td>', obj.set, '</td><td>', obj.team1, '</td><td>', obj.team1Score, ' - ', obj.team2Score, '</td><td>', obj.team2, '</td><td><button class="remove_set">Remove</button></td>' ].join( '' );
 
-					this.set_el.appendChild( el );
+					if ( prepend )
+					{
+						this.set_el.insertBefore( el, this.set_el.firstChild );
+					}
+					else
+					{
+						this.set_el.appendChild( el );
+					}
 
 					return el
 				}
-				, 'addSet' : function addSet( item )
+				, 'addSet' : function addSet( event )
 				{
-					var it = {}
-					  , val = window.prompt( 'Gimme some JSON.', '{\n\t"set": 0\n  ,"team1": ""\n  ,"team1Score": 0\n  ,"team2": ""\n  ,"team2Score": 0\n}' )
+					var _collection = this.collection
+					  , _model = _collection.models[ 0 ]
+					  , _length = _collection.length
 					  ;
 
-					try
-					{
-						it = JSON.parse( val );
-					}
-					catch (e) { return; };
 
-					this.collection.add( [ it ] );
-					this.renderSet( this.collection.models[ this.collection.models.length-1 ] );
+					var it = {}
+					  , _this = this
+					  , val = window.prompt( 'Gimme some scores.', '{\n    "team1Score": 0\n  , "team2Score": 0\n}' );
+
+					if ( !( it = JSON.isJSON( val ) ) )
+						return
+
+					it.set = _length + 1;
+					it.team1 = 	_model.get( 'team1' );
+					it.team2 = 	_model.get( 'team2' );
+
+
+					_collection.add( [ it ] );
+					localStorage.setItem( 'collection.models', JSON.stringify( _collection.models ) );
 				}
-				, 'removeSet' : function changeOrder( event )
+				, 'removeSet' : function removeSet( event )
 				{
 					var p = event.target.parentElement.parentElement;
 
 					this.collection.remove( p.dataset.cid );
+					localStorage.setItem( 'collection.models', JSON.stringify( this.collection.models ) );
 
 					p.parentElement.removeChild( p );
 				}
 				, 'changeOrder' : function changeOrder( event )
 				{
 					comparator.order = event.target.checked? 1 : -1;
+					localStorage.setItem( 'comparator.order', comparator.order );
 					this.collection.sort();
 					this.rerender();
 				}
 				, 'changeSort' : function changeOrder( event )
 				{
 					comparator.type = event.target.value || comparator.type;
+					localStorage.setItem( 'comparator.type', comparator.type );
+
 					this.collection.sort();
 					this.rerender();
 				}

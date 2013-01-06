@@ -21,15 +21,16 @@
             </header>
 			<div id="data">
 				<nav class="actions">
-					<button class="add_set">Add</button>
-					<hr />
-					<select class="sort">
-					  <option value="set">Set</option>
-					  <option value="team1Score">Score team 1</option>
-					  <option value="team2Score">Score team 2</option>
+					<button class="add_set" name="add_set" id="add_set">Add</button>
+					<label for="add_set"> a set</label>, or
+					<label for="sort">sort sets by</label>
+					<select class="sort" name="sort" id="sort">
+						<option value="set">Set number</option>
+						<option value="team1Score">Score team 1</option>
+						<option value="team2Score">Score team 2</option>
 					</select>
-					<label for="sort_order">Sort Alphabetical</label>
-					<input type="checkbox" name="sort_order" id="sort_order" checked />
+					<span> (</span><label for="sort_order">ascending</label>
+					<input type="checkbox" name="sort_order" id="sort_order" checked /><span>).</span>
 				</nav>
 				<table>
 					<thead>
