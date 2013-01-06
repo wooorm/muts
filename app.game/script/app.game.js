@@ -1,8 +1,11 @@
 	(
 	function ( $ )
 	{
+		// Usefull for inspecting from console. Debug.
 		window.exports || ( window.exports = {} );
 
+		// Helper function. Returns undefined if something's wrong with the 
+		// JSON, returns the parsed JSON if the string is JSON.
 		JSON.isJSON = function isJSON( string )
 		{
 			try
@@ -24,12 +27,13 @@
 		// Create new `Set` model.
 		var Set = Backbone.Model.extend( {} );
 
-		var comparator = function set( it )
+		// Create a comparator function.
+		var comparator = function comparator( it )
 		{
 			return it.get( comparator.type ) * comparator.order;
 		};
 
-		// Get comparator data from LocalStorage.
+		// Get comparator data from LocalStorage (typecast `comparator.order`).
 		comparator.order = +localStorage.getItem( 'comparator.order' ) || 1;
 		comparator.type = localStorage.getItem( 'comparator.type' ) || 'set';
 
@@ -37,6 +41,36 @@
 		document.querySelector( '#sort' ).value = comparator.type;
 		document.querySelector( '#sort_order' ).checked = comparator.order > 0;
 
+		var filter = function filter( model )
+		{
+			var t1 = filter.functions[ filter.team1Type ]( model.get( 'team1Score' ), filter.team1Value )
+			  , t2 = filter.functions[ filter.team2Type ]( model.get( 'team2Score' ), filter.team2Value )
+			  ;
+
+			return filter.type > 0? t1 && t2 : t1 || t2;
+		}
+
+		filter.functions = {
+			  'gt'  : function gt( a, b ) { return a > b }
+			, 'gte' : function gt( a, b ) { return a >= b }
+			, 'lt'  : function lt( a, b ) { return a < b }
+			, 'lte' : function lte( a, b ) { return a <= b }
+			, 'is'  : function is( a, b ) { return a == b }
+		}
+
+		// Get comparator data from LocalStorage (typecast `comparator.order`).
+		filter.team1Type  = 'gte';
+		filter.team1Value = 0;
+		filter.team2Type  = 'gte';
+		filter.team2Value = 0;
+		filter.type       = 1;
+
+		// Set filter values based on comparator variables.
+		document.querySelector( '#team1Type' ).value  = filter.team1Type;
+		document.querySelector( '#team1Value' ).value = filter.team1Value;
+		document.querySelector( '#team2Type' ).value  = filter.team2Type;
+		document.querySelector( '#team2Value' ).value = filter.team2Value;
+		document.querySelector( '#type' ).value = filter.type > 0? 'and' : 'or';
 
 		// Create new `Game` collection.
 		var Game = Backbone.Collection.extend(
@@ -46,24 +80,6 @@
 			}
 		);
 
-		// Create new `SetView` view.
-		var SetView = Backbone.View.extend();
-
-		var ResultView = Backbone.View.extend(
-			{
-				  'tagName' : 'tr'
-				, 'template' : function template( obj )
-				{
-					return '<td' + ( obj.winner === 'team1'?  ' class="winner"' : '' ) + '>' + obj.team1 + '</td><td>' + obj.team1Score + ' - ' + obj.team2Score + '</td><td' + ( obj.winner === 'team2'? ' class="winner"' : '' ) + '>' + obj.team2 + '</td>';
-				}
-				, 'render' : function render()
-				{
-					this.el.innerHTML = this.template( this.model );
-					this.el.dataset.cid = this.cid;
-					return this;
-				}
-			}
-		);
 		// Create new `GameView` view.
 		var GameView = Backbone.View.extend(
 			{
@@ -72,160 +88,193 @@
 				, 'result_el' : document.querySelector( '.result_list' )
 				, 'initialize' : function initialize()
 				{
-					var _this = this;
+					// Initialize collection.
 					this.collection = new Game( sets );
 
-					this.collection.bind( 'add', function callback( model, models )
+					// Bind `onadd`, add the set and rerender the results.
+					this.collection.on( 'add', function callback( model, models )
 						{
-							_this.renderResults( true );
-							_this.renderSet( model, true );
-						}
+							this.renderSet( model, true );
+							this.renderResults( true );
+						}, this
 					);
 
-					this.collection.bind( 'remove', function callback( model, models )
+					// Bind `onremove`, and rerender the results.
+					this.collection.on( 'remove', function callback( model, models )
 						{
-							_this.renderResults( true );
-						}
+							this.renderResults( true );
+						}, this
 					);
 
+					// Render the GameView.
 					this.render();
 				}
-				, 'render' : function render()
+				, 'render' : function render( rerender )
 				{
-					var _this = this;
+					// Render results, pass rerender through.
+					this.renderResults( rerender );
 
-					this.renderResults();
+					// If rerender, clear set element.
+					if ( rerender )
+						this.set_el.innerHTML = '';
 
+					// Render the sets.
 					_.each( this.collection.models, function callback( item )
 						{
-							_this.renderSet.call( _this, item );
-						}
-						, this
-					);
-				}
-				, 'rerender' : function rerender()
-				{
-					var _this = this;
-				
-					this.set_el.innerHTML = '';
-
-					_.each( this.collection.models, function callback( item )
-						{
-							_this.renderSet( item );
+							this.renderSet( item );
 						}
 						, this
 					);
 				}
 				, 'renderResults' : function renderResults( rerender )
 				{
-					var resultView = new ResultView(
-						{
-							'model' : this.cleanResults( this.collection.models )
-						}
-					);
+					// Create an overview object from all sets, and a node.
+					var overview = this.overview = this.createOverview()
+					  , el       = document.createElement( 'tr' )
+					  ;
 
+					// Fill element with the overview object.
+					el.innerHTML   = '<td' + ( overview.winner === 'team1'?  ' class="winner"' : '' ) + '>' + overview.team1 + '</td><td>' + overview.team1Score + ' - ' + overview.team2Score + '</td><td' + ( overview.winner === 'team2'? ' class="winner"' : '' ) + '>' + overview.team2 + '</td>';
+
+					// If rerender, clear results element.
 					if ( rerender )
 						this.result_el.innerHTML = '';
 
-					this.result_el.appendChild( resultView.render().el );
+					// Append new node to results element.
+					this.result_el.appendChild( el );
 				}
-				, 'cleanResults' : function cleanResults( _model )
+				, 'renderSet' : function renderSet( model, prepend )
 				{
-					var attrs, model = {
-					  	    'winner'     : null
-					  	  , 'team1'      : ''
-					  	  , 'team2'      : ''
-					  	  , 'team1Score' : 0
-					  	  , 'team2Score' : 0
-					  };
+					// Create object from model, and a node.
+					var obj        = model.toJSON()
+					  , el         = document.createElement( 'tr' )
+					  ;
 
-					_model.forEach( function callback( it, n, us )
-						{
-							attrs = it.attributes;
-
-							if ( attrs.team2Score !== attrs.team1Score )
-								model[ attrs.team2Score > attrs.team1Score? 'team2Score' : 'team1Score' ]++;
-						}
-					);
-
-					model.team1 = _model[ 0 ].attributes.team1;
-					model.team2 = _model[ 0 ].attributes.team2;
-
-					if ( model.team2Score !== model.team1Score )
-						model[ 'winner' ] = attrs.team2Score > attrs.team1Score? 'team2' : 'team1';
-
-					return model;
-				}
-				, 'setViews' : []
-				, 'renderSet' : function render( model, prepend )
-				{
-					var obj = model.toJSON();
-					el = document.createElement( 'tr' );
+  					// Fill element with the model object, add the CID.
 					el.dataset.cid = model.cid;
-					el.innerHTML = [ '<td>', obj.set, '</td><td>', obj.team1, '</td><td>', obj.team1Score, ' - ', obj.team2Score, '</td><td>', obj.team2, '</td><td><button class="remove_set">Remove</button></td>' ].join( '' );
+					el.innerHTML   = [ '<td>', obj.set, '</td><td>', obj.team1, '</td><td>', obj.team1Score, ' - ', obj.team2Score, '</td><td>', obj.team2, '</td><td><button class="remove_set">Remove</button></td>' ].join( '' );
 
-					if ( prepend )
-					{
-						this.set_el.insertBefore( el, this.set_el.firstChild );
-					}
-					else
-					{
-						this.set_el.appendChild( el );
-					}
-
-					return el
+					// Append or prepend new node to set element.
+					this.set_el[ prepend? 'insertBefore' : 'appendChild' ]( el, this.set_el.firstChild );
 				}
 				, 'addSet' : function addSet( event )
 				{
-					var _collection = this.collection
-					  , _model = _collection.models[ 0 ]
-					  , _length = _collection.length
+					// Prompt user for some JSON.
+					var _this       = this
+					  , _collection = this.collection
+					  , _model      = _collection.models[ 0 ]
+					  , _length     = _collection.length
+					  , it          = {}
+					  , val         = window.prompt( 'Gimme some scores.', '{\n    "team1Score": 0\n  , "team2Score": 0\n}' )
 					  ;
 
-
-					var it = {}
-					  , _this = this
-					  , val = window.prompt( 'Gimme some scores.', '{\n    "team1Score": 0\n  , "team2Score": 0\n}' );
-
+  					// Return early if invalid JSON was passed.
 					if ( !( it = JSON.isJSON( val ) ) )
 						return
 
-					it.set = _length + 1;
-					it.team1 = 	_model.get( 'team1' );
-					it.team2 = 	_model.get( 'team2' );
+  					// Set defaults to input.
+  					console.log( this.overview.missingSet, _length + 1 )
 
+					it.set   || ( it.set   = this.overview.missingSet || _length + 1 );
+					it.team1 || ( it.team1 = _model.get( 'team1' ) );
+					it.team2 || ( it.team2 = _model.get( 'team2' ) );
 
-					_collection.add( [ it ] );
+  					// Add input to collection.
+					_collection.add( it );
+
+  					// Store models in LocalStorage.
 					localStorage.setItem( 'collection.models', JSON.stringify( _collection.models ) );
 				}
 				, 'removeSet' : function removeSet( event )
 				{
+  					// Get CID from parents parent.
 					var p = event.target.parentElement.parentElement;
 
+  					// Remove model (by CID) from collection.
 					this.collection.remove( p.dataset.cid );
+
+  					// Store models in LocalStorage.
 					localStorage.setItem( 'collection.models', JSON.stringify( this.collection.models ) );
 
+					// Remove node from HTML.
 					p.parentElement.removeChild( p );
 				}
 				, 'changeOrder' : function changeOrder( event )
 				{
+  					// Set new order to comparator.
 					comparator.order = event.target.checked? 1 : -1;
+
+  					// Store order in LocalStorage.
 					localStorage.setItem( 'comparator.order', comparator.order );
+
+  					// Sort and rerender collection.
 					this.collection.sort();
-					this.rerender();
+					this.render( true );
 				}
-				, 'changeSort' : function changeOrder( event )
+				, 'changeSort' : function changeSort( event )
 				{
 					comparator.type = event.target.value || comparator.type;
 					localStorage.setItem( 'comparator.type', comparator.type );
 
 					this.collection.sort();
-					this.rerender();
+					this.render( true );
+				}
+				, 'changeFilter'  : function changeFilter( event )
+				{
+					filter[ event.target.id ] = event.target.value;
+
+					models = this.collection.filter( filter, this );
+					console.log( models );
+
+					this.set_el.innerHTML = '';
+
+					// Render the sets.
+					_.each( models, function callback( item )
+						{
+							this.renderSet( item );
+						}
+						, this
+					);
+				}
+				, 'createOverview' : function createOverview()
+				{
+  					// Create default overview object, store models.
+					var attrs, overview = {
+					  	    'winner'     : null
+					  	  , 'team1'      : ''
+					  	  , 'team2'      : ''
+					  	  , 'team1Score' : 0
+					  	  , 'team2Score' : 0
+					  	  , 'missingSet' : null
+					 }, models =  this.collection.models
+					  ;
+
+					// Iterate over models to add scores to overview object.
+  					_.each( models, function callback( it, n, us )
+  						{
+							attrs = it.attributes;
+
+							if ( !overview.missingSet && attrs.set !== n + 1 )
+								overview.missingSet = n + 1;
+
+							if ( attrs.team2Score !== attrs.team1Score )
+								overview[ attrs.team2Score > attrs.team1Score? 'team2Score' : 'team1Score' ]++;
+  						}
+  					);
+
+					overview.team1 = models[ 0 ].get( 'team1' );
+					overview.team2 = models[ 0 ].get( 'team2' );
+
+					if ( overview.team2Score !== overview.team1Score )
+						overview[ 'winner' ] = attrs.team2Score > attrs.team1Score? 'team2' : 'team1';
+
+					return overview;
 				}
 				, 'events' : {
 					    'click .add_set' : 'addSet'
 					  , 'click #sort_order' : 'changeOrder'
 					  , 'change .sort' : 'changeSort'
+					  , 'change .filter_score' : 'changeFilter'
 					  , 'click .remove_set' : 'removeSet'
 				},
 

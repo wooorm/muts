@@ -21,16 +21,38 @@
             </header>
 			<div id="data">
 				<nav class="actions">
-					<button class="add_set" name="add_set" id="add_set">Add</button>
-					<label for="add_set"> a set</label>, or
+					<button class="add_set" id="add_set">Add</button>
+					<label for="add_set"> a set</label>, 
 					<label for="sort">sort sets by</label>
-					<select class="sort" name="sort" id="sort">
+					<select class="sort" id="sort">
 						<option value="set">Set number</option>
 						<option value="team1Score">Score team 1</option>
 						<option value="team2Score">Score team 2</option>
 					</select>
 					<span> (</span><label for="sort_order">ascending</label>
-					<input type="checkbox" name="sort_order" id="sort_order" checked /><span>).</span>
+					<input type="checkbox" id="sort_order" checked /><span>) or filter by score: </span>
+					<label for="team1Type">Score team 1</label><span> is </span>
+					<select class="team1Type filter_score" id="team1Type">
+						<option value="gte" selected>more than or equal to</option>
+						<option value="gt">more than</option>
+						<option value="is">equal to</option>
+						<option value="lt">less than</option>
+						<option value="lte">less than or equal to</option>
+					</select>
+					<input class="filter_score" type="number" id="team1Value" min="0" max="10" value="0" /><span>,
+					</span><select class="filter_score" id="type">
+						<option value="and" selected>and</option>
+						<option value="or">or</option>
+					</select>
+					<label for="team2Type">Score team 2</label>
+					<select class="team2Type filter_score" id="team2Type"><span> is </span>
+						<option value="gte" selected>more than or equal to</option>
+						<option value="gt">more than</option>
+						<option value="is">equal to</option>
+						<option value="lt">less than</option>
+						<option value="lte">less than or equal to</option>
+					</select>
+					<input class="filter_score" type="number" id="team2Value" min="0" max="10" value="0" />
 				</nav>
 				<table>
 					<thead>
