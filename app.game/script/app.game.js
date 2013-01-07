@@ -111,6 +111,8 @@
 					// Render results, pass rerender through.
 					this.renderResults( rerender );
 
+					this.set_el.classList.add( 'inserting' );
+
 					// If rerender, clear set element.
 					if ( rerender )
 						this.set_el.innerHTML = '';
@@ -121,6 +123,13 @@
 							this.renderSet( item );
 						}
 						, this
+					);
+					
+					var el = this.set_el;
+					window.setTimeout(
+						function(){
+							el.classList.remove( 'inserting' )
+						}, 250
 					);
 				}
 				, 'renderResults' : function renderResults( rerender )
@@ -220,6 +229,7 @@
 
 					models = this.collection.filter( filter, this );
 
+					this.set_el.classList.add( 'inserting' );
 					this.set_el.innerHTML = '';
 
 					// Render the sets.
@@ -228,6 +238,13 @@
 							this.renderSet( item );
 						}
 						, this
+					);
+
+					var el = this.set_el;
+					window.setTimeout(
+						function(){
+							el.classList.remove( 'inserting' )
+						}, 250
 					);
 				}
 				, 'createOverview' : function createOverview()

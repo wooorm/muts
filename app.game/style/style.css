@@ -145,3 +145,13 @@ td, th
 {
 	content: " *";
 }
+
+.inserting
+{
+	background: yellow;
+}
+
+.inserting tr:nth-of-type(even)
+{
+	background: transparent;
+}
