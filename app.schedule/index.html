@@ -4,30 +4,46 @@
     <head>
         <meta charset="UTF-8" />
         <title>Backbone.js Web App</title>
-		<link href='http://fonts.googleapis.com/css?family=Shadows+Into+Light+Two' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" href="css/screen.css" />
     </head>
     <body>
-		<div id="wrapper">
-			<h1 id="frisbee_league">Pool A - Schedule</h1>
-			<table id="schedule"></table>
-		</div>	
-        
-		
-        <script id="gameTemplate" type="text/template">
-				<td><%= date %></td>
-				<td><%= team1 %></td>
-				<td><%= result %></td>
-				<td><%= team2 %></td>
+    	<h1><center>Schedule</center></h1>
+        <div id="contacts">
+            <header>
+                <div id="filter"><label>Select: </label></div>
+                <a href="#" class="show_hide" rel="#slidingDiv">Add new game</a>
+                <div id="slidingDiv">
+                <form id="addContact" action="#">
+                    <label for="date">Date: </label><input id="date" />
+                    <label for="team1">Team 1: </label><input id="team1" /><br/>
+                    <label for="result">Result: </label><input id="result" />
+                    <label for="team2">Team 2: </label><input id="team2" />
+                    <button id="add">Add</button>
+                </form>
+                </div>
+                <hr/>
+            </header>
+        </div>
+        <script id="contactTemplate" type="text/template">
+            <td><%= date %></td>
+			<td><%= team1 %></td>
+			<td><%= result %></td>
+			<td><%= team2 %></td>
+			<td><button class="delete">Delete</button></td>
         </script>
-		
-		<!-- Libraries -->
-        <script src="js/libs/jquery-1.7.1.min.js"></script>
-        <script src="js/libs/json2.js"></script>
-        <script src="js/libs/underscore-min.js"></script>
-        <script src="js/libs/backbone-min.js"></script>
+        <script src="js/jquery-1.7.1.min.js"></script>
+        <script src="js/json2.js"></script>
+        <script src="js/underscore-min.js"></script>
+        <script src="js/backbone-min.js"></script>
+        <script src="js/data.js"></script>
+        <script src="js/model.js"></script>
+        <script src="js/collection.js"></script>
+        <script src="js/view.js"></script>
+        <script src="js/router.js"></script>
+        <!-- <script src="js/app.js"></script> -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+        <script src="js/showhide.js"></script>
+        
 
-		<!-- Application -->
-        <script src="js/app/app.js"></script>
     </body>
 </html>

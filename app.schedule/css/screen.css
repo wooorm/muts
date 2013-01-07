@@ -1,45 +1,30 @@
 ﻿* {
-	margin:0;
-	padding:0;
-}
-body {
-	color:#fff;
-	font-family:verdana;
-	background: url('../img/frisbee.jpeg') no-repeat fixed;
-	padding-top:20px;
-}
-#wrapper {
-	width:1000px;
-}
-h1 {
-	font-family: 'Shadows Into Light Two', cursive;
-	margin-bottom:.5em;
-	margin-left:20px;
-}
-h2 {
-	font-weight:normal;
-	font-size:1em;
+	font-family: Verdana, Geneva, sans-serif;
+	font-size: 14px;
 }
 
-table{
+td {
+	padding-right: 20px;
+	padding-bottom: 5px;
+}
+
+header {
+	margin-bottom: 10px;
+}
+
+#contacts {
+	border: solid 5px #eee;
+	padding: 10px;
+	width: 650px;
 	margin-left: auto;
 	margin-right: auto;
-    width: 80%;
-    background-color: rgba(100, 200, 100, 0.5);
-    margin-bottom: 1em;
 }
-tr{
-    text-align: left;
-	padding-top: 20px;
-	padding-bottom: 20px;
+
+input#result {
+	width: 40px;
+	clear: both;
 }
-tr:nth-child(even){
-    background-color: rgba(100, 200, 100, 0.5);
-	padding-top: 20px;
-	padding-bottom: 20px;
-}
-.winner:after{
-    content: "*"; 
-    color: red;
-    font-size: 180%;
+
+#slidingDiv {
+	display: none;
 }

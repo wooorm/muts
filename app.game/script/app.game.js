@@ -1,4 +1,4 @@
-	(
+(
 	function ( $ )
 	{
 		// Helper function. Returns undefined if something's wrong with the 
