@@ -1,9 +1,6 @@
 	(
 	function ( $ )
 	{
-		// Usefull for inspecting from console. Debug.
-		window.exports || ( window.exports = {} );
-
 		// Helper function. Returns undefined if something's wrong with the 
 		// JSON, returns the parsed JSON if the string is JSON.
 		JSON.isJSON = function isJSON( string )
@@ -165,7 +162,7 @@
 					  , _model      = _collection.models[ 0 ]
 					  , _length     = _collection.length
 					  , it          = {}
-					  , val         = window.prompt( 'Gimme some scores.', '{\n    "team1Score": 0\n  , "team2Score": 0\n}' )
+					  , val         = window.prompt( 'Gimme some scores.', '{ "team1Score": 0, "team2Score": 0 }' )
 					  ;
 
   					// Return early if invalid JSON was passed.
@@ -173,8 +170,6 @@
 						return
 
   					// Set defaults to input.
-  					console.log( this.overview.missingSet, _length + 1 )
-
 					it.set   || ( it.set   = this.overview.missingSet || _length + 1 );
 					it.team1 || ( it.team1 = _model.get( 'team1' ) );
 					it.team2 || ( it.team2 = _model.get( 'team2' ) );
@@ -224,7 +219,6 @@
 					filter[ event.target.id ] = event.target.value;
 
 					models = this.collection.filter( filter, this );
-					console.log( models );
 
 					this.set_el.innerHTML = '';
 
@@ -261,12 +255,11 @@
 								overview[ attrs.team2Score > attrs.team1Score? 'team2Score' : 'team1Score' ]++;
   						}
   					);
-
 					overview.team1 = models[ 0 ].get( 'team1' );
 					overview.team2 = models[ 0 ].get( 'team2' );
 
 					if ( overview.team2Score !== overview.team1Score )
-						overview[ 'winner' ] = attrs.team2Score > attrs.team1Score? 'team2' : 'team1';
+						overview[ 'winner' ] = overview.team1Score > overview.team2Score? 'team1' : 'team2';
 
 					return overview;
 				}
@@ -282,7 +275,6 @@
 		);
 
 		// Instanciate the `GameView` view.
-		exports.gameView = new GameView();
-		exports.comparator = comparator;
+		new GameView();
 	}
 ( jQuery ) );
