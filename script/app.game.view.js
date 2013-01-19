@@ -1,42 +1,13 @@
-(
-	function ( $ )
+define( [ 'jquery', 'lodash', 'backbone', '$tore', 'game.collection' ], function( $, _, Backbone, $tore, collection )
 	{
-		// Helper function. Returns undefined if something's wrong with the 
-		// JSON, returns the parsed JSON if the string is JSON.
-		JSON.isJSON = function isJSON( string )
-		{
-			try
-			{
-				return JSON.parse( string );
-			}
-			catch (e) { return };
-		}
+		var exports = this;
 
-		// Raw data.
-		var sets = JSON.isJSON( localStorage.getItem( 'collection.models' ) ) || [
-			  { 'set': 1, 'team1' : 'Boomsquad', 'team1Score' : 4, 'team2' : 'Burning Snow', 'team2Score' : 1 }
-			, { 'set': 2, 'team1' : 'Boomsquad', 'team1Score' : 3, 'team2' : 'Burning Snow', 'team2Score' : 4 }
-			, { 'set': 3, 'team1' : 'Boomsquad', 'team1Score' : 0, 'team2' : 'Burning Snow', 'team2Score' : 4 }
-			, { 'set': 4, 'team1' : 'Boomsquad', 'team1Score' : 2, 'team2' : 'Burning Snow', 'team2Score' : 4 }
-			, { 'set': 5, 'team1' : 'Boomsquad', 'team1Score' : 4, 'team2' : 'Burning Snow', 'team2Score' : 3 }
-		];
+		var root = exports.app.root_game = document.createElement( 'div' );
 
-		// Create new `Set` model.
-		var Set = Backbone.Model.extend( {} );
+		root.id = 'root_game';
+		root.innerHTML = '<header><h1><span>League: </span>AMSU - 12</h1><h2><span>Tournament: </span>Threesome</h2></header><article><header><h3>Pool A - Score Updates - Boomsquad vs. Burning Snow</h3></header><div id="data"><nav class="actions"><button class="add_set" id="add_set">Add</button><label for="add_set"> a set</label>, <label for="sort">sort sets by</label> <div class="select"><select class="sort" id="sort"><option value="set">Set number</option><option value="team1Score">Score team 1</option><option value="team2Score">Score team 2</option></select></div><span> (</span><label for="sort_order">ascending</label> <div class="checkbox"><input type="checkbox" id="sort_order" checked /><span class="checker"></span></div><span>) or filter by score: </span><br /><label for="team1Type">Score team 1</label><span> is </span> <div class="select"><select class="team1Type filter_score" id="team1Type"><option value="gte" selected>more than or equal to</option><option value="gt">more than</option><option value="is">equal to</option><option value="lt">less than</option><option value="lte">less than or equal to</option></select></div> <input class="filter_score" type="number" id="team1Value" min="0" max="10" value="0" /><span>, </span><div class="select"><select class="filter_score" id="type"><option value="and" selected>and</option><option value="or">or</option></select></div> <label for="team2Type">Score team 2</label> <div class="select"><select class="team2Type filter_score" id="team2Type"><span> is </span><option value="gte" selected>more than or equal to</option><option value="gt">more than</option><option value="is">equal to</option><option value="lt">less than</option><option value="lte">less than or equal to</option></select></div> <input class="filter_score" type="number" id="team2Value" min="0" max="10" value="0"/></nav><table><thead><tr><th>Team</th><th>Result</th><th>Team</th></tr></thead><tbody class="result_list"></tbody></table><table><thead><th>Set</th><th>Team</th><th>Team 1 Result</th><th>Team 2 Result</th><th>Team</th><th>Remove</th></thead><tbody class="set_list"></tbody></table></div></article>';
 
-		// Create a comparator function.
-		var comparator = function comparator( it )
-		{
-			return it.get( comparator.type ) * comparator.order;
-		};
-
-		// Get comparator data from LocalStorage (typecast `comparator.order`).
-		comparator.order = +localStorage.getItem( 'comparator.order' ) || 1;
-		comparator.type = localStorage.getItem( 'comparator.type' ) || 'set';
-
-		// Set Select and Checkbox value based on comparator variables.
-		document.querySelector( '#sort' ).value = comparator.type;
-		document.querySelector( '#sort_order' ).checked = comparator.order > 0;
+		exports.app.root.appendChild( root );
 
 		var filter = function filter( model )
 		{
@@ -55,38 +26,34 @@
 			, 'is'  : function is( a, b ) { return a == b }
 		}
 
-		// Get comparator data from LocalStorage (typecast `comparator.order`).
+		// Get comparator data from LocalStorage.
 		filter.team1Type  = 'gte';
 		filter.team1Value = 0;
 		filter.team2Type  = 'gte';
 		filter.team2Value = 0;
 		filter.type       = 1;
 
-		// Set filter values based on comparator variables.
-		document.querySelector( '#team1Type' ).value  = filter.team1Type;
-		document.querySelector( '#team1Value' ).value = filter.team1Value;
-		document.querySelector( '#team2Type' ).value  = filter.team2Type;
-		document.querySelector( '#team2Value' ).value = filter.team2Value;
-		document.querySelector( '#type' ).value = filter.type > 0? 'and' : 'or';
-
-		// Create new `Game` collection.
-		var Game = Backbone.Collection.extend(
+		// Create new `View` view.
+		var View = Backbone.View.extend(
 			{
-				  'model' : Set
-				, 'comparator' : comparator
-			}
-		);
-
-		// Create new `GameView` view.
-		var GameView = Backbone.View.extend(
-			{
-				  'el' : document.querySelector( '#data' )
+				  'el' : root
 				, 'set_el' : document.querySelector( '.set_list' )
 				, 'result_el' : document.querySelector( '.result_list' )
 				, 'initialize' : function initialize()
 				{
+					// Set Select and Checkbox value based on comparator variables.
+					document.querySelector( '#sort' ).value = app.$tore.comparator.type;
+					document.querySelector( '#sort_order' ).checked = app.$tore.comparator.order > 0;
+
+					// Set filter values based on comparator variables.
+					document.querySelector( '#team1Type' ).value  = filter.team1Type;
+					document.querySelector( '#team1Value' ).value = filter.team1Value;
+					document.querySelector( '#team2Type' ).value  = filter.team2Type;
+					document.querySelector( '#team2Value' ).value = filter.team2Value;
+					document.querySelector( '#type' ).value = filter.type > 0? 'and' : 'or';
+
 					// Initialize collection.
-					this.collection = new Game( sets );
+					this.collection = new collection( app.$tore.collection.models );
 
 					// Bind `onadd`, add the set and rerender the results.
 					this.collection.on( 'add', function callback( model, models )
@@ -103,7 +70,7 @@
 						}, this
 					);
 
-					// Render the GameView.
+					// Render the View.
 					this.render();
 				}
 				, 'render' : function render( rerender )
@@ -149,6 +116,14 @@
 					// Append new node to results element.
 					this.result_el.appendChild( el );
 				}
+				, 'show' : function show()
+				{
+					this.el.style.display = '';
+				}
+				, 'hide' : function hide()
+				{
+					this.el.style.display = 'none';
+				}
 				, 'renderSet' : function renderSet( model, prepend )
 				{
 					// Create object from model, and a node.
@@ -158,7 +133,7 @@
 
   					// Fill element with the model object, add the CID.
 					el.dataset.cid = model.cid;
-					el.innerHTML   = [ '<td>', obj.set, '</td><td>', obj.team1, '</td><td>', obj.team1Score, ' - ', obj.team2Score, '</td><td>', obj.team2, '</td><td><button class="remove_set">Remove</button></td>' ].join( '' );
+					el.innerHTML   = [ '<td data-id="set">', obj.set, '</td><td data-id="team1">', obj.team1, '</td><td data-id="team1Score">', obj.team1Score, '</td><td data-id="team2Score">', obj.team2Score, '</td><td data-id="team2">', obj.team2, '</td><td class="button_bar"><button class="edit_set">Edit</button><button class="remove_set">Remove</button></td>' ].join( '' );
 
 					// Append or prepend new node to set element.
 					this.set_el[ prepend? 'insertBefore' : 'appendChild' ]( el, this.set_el.firstChild );
@@ -175,8 +150,8 @@
 					  ;
 
   					// Return early if invalid JSON was passed.
-					if ( !( it = JSON.isJSON( val ) ) )
-						return
+					if ( !( it = util.from_json( val ) ) )
+						return;
 
   					// Set defaults to input.
 					it.set   || ( it.set   = this.overview.missingSet || _length + 1 );
@@ -187,7 +162,7 @@
 					_collection.add( it );
 
   					// Store models in LocalStorage.
-					localStorage.setItem( 'collection.models', JSON.stringify( _collection.models ) );
+					app.$tore.collection.models = _collection.models;
 				}
 				, 'removeSet' : function removeSet( event )
 				{
@@ -198,18 +173,68 @@
 					this.collection.remove( p.dataset.cid );
 
   					// Store models in LocalStorage.
-					localStorage.setItem( 'collection.models', JSON.stringify( this.collection.models ) );
+					app.$tore.collection.models = this.collection.models;
 
 					// Remove node from HTML.
 					p.parentElement.removeChild( p );
 				}
+				, 'editSet' : function editSet( event )
+				{
+					var _collection = this.collection
+					  , p = event.target.parentElement.parentElement
+					  , _model = _collection.get( p.dataset.cid )
+					  , children = p.children
+  					  , vals = {}
+  					  , buttons = null
+					  , val, onclick
+					  ;
+
+					onclick = function onclick()
+					{
+						Array.prototype.forEach.call( children, function( it, i )
+							{
+								// Restore edit and remove buttons.
+								if ( i === children.length - 1 )
+									return it.innerHTML = buttons;
+
+								// Get changed value from input. Store in `vals` and as new innerText.
+								it.innerText = vals[ it.dataset.id ] = it.children[ 0 ].value;
+							}
+						);
+
+						// Set new values to model and collection.
+						_model.set( vals );
+
+						// Store models in localStorage.
+						app.$tore.collection.models = _collection.models;
+					};
+
+					Array.prototype.forEach.call( children, function( it, i )
+						{
+							// Store the edit/and remove buttons, change them for a store button.
+							if ( i === children.length - 1 )
+							{
+								buttons = it.innerHTML;
+								it.innerHTML = '<button class="store_set">Store</button>';
+								it.children[ 0 ].addEventListener( 'click', onclick );
+								return;
+							}
+
+							// Store the value in `val`, and in the `vals` object.
+							val = vals[ it.dataset.id ] = it.innerText;
+
+							// Check for `NaN`.
+							var isNumber = +val, isNumber = isNumber === isNumber;
+
+							// Create input field.
+							it.innerHTML = '<input type="' + ( isNumber? 'number' : 'text' ) + '" value="' + val + '" />';
+						}
+					);
+				}
 				, 'changeOrder' : function changeOrder( event )
 				{
   					// Set new order to comparator.
-					comparator.order = event.target.checked? 1 : -1;
-
-  					// Store order in LocalStorage.
-					localStorage.setItem( 'comparator.order', comparator.order );
+					app.$tore.comparator.order = event.target.checked? 1 : -1;
 
   					// Sort and rerender collection.
 					this.collection.sort();
@@ -217,8 +242,8 @@
 				}
 				, 'changeSort' : function changeSort( event )
 				{
-					comparator.type = event.target.value || comparator.type;
-					localStorage.setItem( 'comparator.type', comparator.type );
+					if ( event.target.value )
+						app.$tore.comparator.type = event.target.value;
 
 					this.collection.sort();
 					this.render( true );
@@ -241,6 +266,7 @@
 					);
 
 					var el = this.set_el;
+
 					window.setTimeout(
 						function(){
 							el.classList.remove( 'inserting' )
@@ -286,12 +312,12 @@
 					  , 'change .sort' : 'changeSort'
 					  , 'change .filter_score' : 'changeFilter'
 					  , 'click .remove_set' : 'removeSet'
+					  , 'click .edit_set' : 'editSet'
 				},
 
 			}
 		);
 
-		// Instanciate the `GameView` view.
-		new GameView();
+		return View;
 	}
-( jQuery ) );
+);
