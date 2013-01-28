@@ -1,6 +1,6 @@
 define(
-	  [ 'jquery', 'lodash', 'backbone', '$tore', 'game.view', 'game.data' ]
-	, function anonymous( $, _, Backbone, $tore, view, data )
+	  [ 'jquery', 'lodash', 'backbone', '$tore', 'game.view' ]
+	, function anonymous( $, _, Backbone, $tore, view )
 	{
 		var exports = this
 		  , app = exports.app
@@ -11,29 +11,11 @@ define(
 		util.from_json = $tore.prototype.from_json
 
 		app.$tore.init( {
-				  'key' : 'collection.models'
-				, 'default' : data
-			}, {
 				  'key' : 'comparator.order'
 				, 'default' : 1
 			}, {
 				  'key' : 'comparator.type'
 				, 'default' : 'set'
-			}, {
-				  'key' : 'filter.team1Type'
-				, 'default' : 'gte'
-			}, {
-				  'key' : 'filter.team1Value'
-				, 'default' : 0
-			}, {
-				  'key' : 'filter.team2Type'
-				, 'default' : 'gte'
-			}, {
-				  'key' : 'filter.team2Value'
-				, 'default' : 0
-			}, {
-				  'key' : 'filter.type'
-				, 'default' : 1
 			}
 		);
 
