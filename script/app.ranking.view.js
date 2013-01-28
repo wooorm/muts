@@ -1,154 +1,162 @@
 define(
-	  [ 'jquery', 'lodash', 'backbone', '$tore', 'ranking.collection' ]
-	, function anonymous( $, _, Backbone, $tore, collection )
+	  [ 'jquery', 'lodash', 'backbone', 'ranking.collection' ]
+	, function anonymous( $, _, Backbone, collection )
 	{
 		var exports = this;
 
-		var root = exports.app.root_game = document.createElement( 'div' );
+		var root = exports.app.root_ranking = document.createElement( 'div' );
 
 		root.id = 'root_ranking';
 
-		root.innerHTML = '<header><h1><span>League: </span>AMSU - 12</h1><h2><span>Tournament: </span>Threesome</h2></header><div id="data"><nav class="actions"><form id="addTeam">Add new team: <label for=teamname>Team name:</label> <input type="text" name="teamname" id="teamname" />, <label for=wins>Wins</label>: <input type="text" name="wins" id="wins" />, <label for=losses>Losses</label>: <input type="text" name="losses" id="losses" />, <label for=setswon>Sets won</label>: <input type="text" name="setswon" id="setswon" />, <label for="setslost">Sets lost</label>: <input type="text" name="setslost" id="setslost">, <label for=pointswon>Points won</label>: <input type="text" name="pointswon" id="pointswon" />, <label for=pointslost>Points lost</label>: <input type="text" name="pointslost" id="pointslost" />, <input type="submit" value="Submit" class="submit" />.</form></nav><article id="pool"><header><h3>Pool A - Ranking</h3></header><label>Select: </label><div class="select" id="filter"></div><table><thead><tr><th>Team</th><th>W</th><th>L</th><th>Sets won</th><th>Sets lost</th><th>Points won</th><th>Points lost</th><th>+/-</th><th>Change</th></tr></thead><tbody></tbody></table></article><script id="rankingTemplate" type="text/template"><td><%= team %></td><td><%= Win %></td><td><%= Lost %></td><td><%= Sw %></td><td><%= Sl %></td><td><%= Pw %></td><td><%= Pl %></td><td><%= Saldo %></td><td class="button_bar"><button class="edit">Edit</button><button class="delete">Remove</button></td></script>';
+		root.innerHTML = '<header><h1><span>League:</span>AMSU - 12</h1><h1><span>Tournament:</span>Threesome</h1></header><article id="pool"><nav class="actions"><div id="filter">\n<label>Show:</label>\n</div></nav><table>\n<thead>\n<tr>\n<th>Team</th><th>Games Played</th><th>Wins</th><th>Loses</th><th>Saldo</th><th>Actions</th></tr>\n</thead>\n<tbody></tbody>\n</table>\n</article>\n\n<script id="rankingTemplate" type="text/template">\n<td><%= name %></td>\n<td><%= gamesPlayed %></td>\n<td><%= wins %></td>\n<td><%= losses %></td>\n<td><%= saldo %></td>\n<td><button class="delete_ranking">Remove</button></td>\n</script>'
 
 		exports.app.root.appendChild( root );
 
 		// Define individual tournament view.
-		var TeamView = Backbone.View.extend( {
+		Team = Backbone.View.extend({
 			  'tagName' : 'tr'
 			, 'template' : $( '#rankingTemplate' ).html()
-			, 'events' : {
-				'click .delete': 'deleteTeam'
-			}
-			, 'deleteTeam' : function deleteTeam()
+			, 'initialize' : function initialize()
 			{
+			}
+			, 'events' : {
+				'click .delete_ranking': 'deleteTeam'
+			}
+			, 'deleteTeam' : function deleteTeam( e )
+			{
+				// Prevent default behaviour.
+				e.preventDefault();
 				this.model.destroy();
 				this.remove();
 			}
 			, 'render' : function render()
 			{
-					// Store template in variable
-					var tmpl = _.template( this.template );
+				// Store template in variable.
+				var tmpl = _.template( this.template );
 
-					// Inject the rendered tempate into the views element
-					$( this.el ).html( tmpl( this.model.toJSON() ) );
+				// Inject the rendered tempate into the views element.
+				$( this.el ).html( tmpl( this.model.toJSON() ) );
 
-					return this;
+				return this;
 			}
 		} );
 
-		// Define pool view
-		var PoolView = Backbone.View.extend( {
-			  'el' : root
+		var Pool = Backbone.View.extend( {
+			  'el' : $('#pool')
 			, 'initialize' : function initialize()
 			{
-				// Run this function whenever this collection is created
+				var self = this;
 
-				// Load the data for this collection
-				this.collection = new collection( app.$tore.ranking.collection.models );
-				
-				// Show the collection on screen
-				this.render();
+				// Load the data for this collection.
+				this.collection = new collection();
+						
 
-				// Show the select on screen
-				this.buildSelect();
+				this.collection.fetch( {
+					'success' : function success( data )
+					{
+						// Show the collection on screen.
+						self.render();
 
-				// Listen for 'change:filterType'
+						// Show the filter.
+						self.buildSelect();
+					}
+				} );
+
+				// Listen for `change:filterType`.
 				this.on( 'change:filterType', this.filterByType, this );
 
-				// Listen for 'reset' on collection
-				this.collection.on( 'reset', this.render, this );
+				// Listen for `reset` on collection.
+		        this.collection.on( 'reset', this.render, this );
 
-				// Listen for 'remove' on collection
+				// Listen for `remove` on collection.
 				this.collection.on( 'remove', this.deleteTeam, this );
 			}
-			, 'show' : function show()
-			{
-				this.el.style.display = '';
-			}
-			, 'hide' : function hide()
-			{
-				this.el.style.display = 'none';
-			}
 			, 'events' : {
-				// Listen for DOM events
-				'change #filter select': 'setFilter',
-				'submit #addTeam' : 'addTeam'
+				'change #filter select': 'setFilter'
 			}
 			, 'render' : function render()
 			{
-				// Show collection on screen
 				this.$el.find( 'tbody' ).html( '' );
 
-				_.each( this.collection.models, function callback( it )
-				{
-					this.renderTeam( it );
-				}, this );
-			}
-			, 'renderTeam' : function renderTeam( it )
-			{
-				// Render schedule
-
-				// Create new instance of TeamView
-				var teamView = new TeamView(
+				_.each( this.collection.models, function callback( model )
 					{
-						'model' : it
-					}
+						this.renderTeam( model );
+					}, this
 				);
-
-				// Append the rendered HTML to the views element
-				this.$el.find( 'tbody' ).append( teamView.render().el );
 			}
+			, 'renderTeam': function renderTeam( it )
+			{
+				// Render team
+
+				// Create new instance of Team.
+				var team = new Team( {
+					'model' : it
+				} );
+
+				// Append the rendered HTML to the views element.
+				this.$el.find( 'tbody' ).append( team.render().el );
+		    }
 			, 'getTypes' : function getTypes()
 			{
-				// Get names for team select box
-				return _.uniq( this.collection.pluck( 'team' ), false, function callback( it )
+				// Get names for team select box.
+
+				return _.uniq( this.collection.pluck( 'name' ), false
+					, function callback( type )
 					{
-						return it.toLowerCase();
+						return type.toLowerCase();
 					}
 				);
 			}
-			, 'buildSelect' : function buildSelect()
+			, 'buildSelect': function buildSelect()
 			{
-				// Create team select box
-				var filter = this.$el.find('#filter')
-				  , select = $('<select/>', {
-						'html' : '<option value="all">all</option>'
-					}
-				);
+				// Create team select box.
 
-				//Empty #filter
-				filter.html( '' );
+				var filter = this.$el.find('#filter')
+				  , select, div
+				  ;
+
+				select = $( '<select/>', {
+					'html' : '<option value="all">All</option>'
+				} );
+
+				// Empty #filter.
+				filter.html( '<label>Show:</label>' );
 
 				_.each( this.getTypes(), function callback( it )
 					{
-						var option = $( '<option/>', {
-								'value' : it.toLowerCase(),
-								'text' : it.toLowerCase()
-							}
-						).appendTo( select );
+						$( '<option/>', {
+							  'value' : it.toLowerCase()
+							, 'text'  : it
+						} ).appendTo( select );
 					}
 				);
+				
+				div = $( '<div class="select"/>' ).append( select )
 
-				this.$el.find( '#filter' ).append( select );
+			    this.$el.find( '#filter' ).append( div ); 
 			}
-			, 'setFilter'  : function setFilter( e )
+			, 'setFilter' : function setFilter( e )
 			{
-				// Set filter
+				// Set filter.
 				this.filterType = e.currentTarget.value;
 
-				// Trigger custom event handler
-				this.trigger('change:filterType');
+				console.log( 'set:filterType', this.filterType );
+
+				// Trigger custom event handler.
+				this.trigger( 'change:filterType' );
 			}
 			, 'filterByType' : function filterByType()
 			{
-				// Filter the collection
+
 				if ( this.filterType === 'all' )
 				{
-					this.collection.reset( app.$tore.ranking.collection.models );
+					this.collection.reset( this.collection._cache );
 				}
 				else
 				{
-					this.collection.reset( app.$tore.ranking.collection.models, { 'silent' : true } );
+					this.collection.reset( this.collection._cache, {
+						'silent' : true
+					} );
 
 					var filterType = this.filterType
 					  , filtered
@@ -156,54 +164,38 @@ define(
 
 					filtered = _.filter( this.collection.models, function callback( it )
 						{
-							return it.get( 'team' ).toLowerCase() === filterType;
+							return it.get( 'name' ).toLowerCase() === filterType;
 						}
 					);
 
 					this.collection.reset( filtered );
-				}
+			    }
 			}
 			, 'deleteTeam' : function deleteTeam()
 			{
-				// At this point backbone already deleted the model from the collection.
-				// So just set the data to the collection
-
-				this.persist();
-				this.buildSelect();
-			}
-			, 'addTeam' : function addTeam( event )
-			{
-				event.preventDefault();
-
-				var form = $( '#addTeam' );
-
-				//Use the object team and get the values out of the input fields
-				var team = {
-					  'team' : form.find( 'input[name=teamname]' ).val()
-					, 'Win' :  +form.find( 'input[name=wins]' ).val()
-					, 'Lost' : +form.find( 'input[name=losses]' ).val()
-					, 'Sw' : +form.find( 'input[name=setswon]' ).val()
-					, 'Sl' : +form.find( 'input[name=setslost]' ).val()
-					, 'Pw' : +form.find( 'input[name=pointswon]' ).val()
-					, 'Pl' : +form.find( 'input[name=pointslost]' ).val()
-				};
-
-				this.collection.add( team );
-
-				this.render();
-
+				// At this point Backbone has already removed the model from
+				// the collection. So just set the data to the collection
 				this.persist();
 
 				this.buildSelect();
 			}
-			,
-			'persist' : function persist()
+			, 'persist' : function persist()
 			{
-				//Save current collection to data.
-				app.$tore.ranking.collection.models = this.collection.models;
+				// Save current collection to data
+				this.collection._cache = this.collection.models;
+			}
+			, 'show' : function show( args )
+			{
+				root.style.display = '';
+				return 'show:ranking:works';
+			}
+			, 'hide' : function hide()
+			{
+				root.style.display = 'none';
+				return 'hide:ranking:works';
 			}
 		} );
 
-		return PoolView;
+		return Pool;
 	}
 )

@@ -1,21 +1,17 @@
-define( [ 'jquery', 'lodash', 'backbone', '$tore' ], function( $, _, Backbone, $tore )
+define(
+	  [ 'jquery', 'lodash', 'backbone' ]
+	, function anonymous( $, _, Backbone )
 	{
 		return {
 			'team' : Backbone.Model.extend( {
 				'defaults' : {
-					  'team' : 'Team name unknown'
-					, 'win' : 0
-					, 'lost' : 0
-					, 'sw' : 0
-					, 'sl' : 0
-					, 'pw' : 0
-					, 'pl' : 0
+					  'team'        : 'Team name unknown'
+					, 'gamesPlayed' : 0
+					, 'w'           : 0
+					, 'l'           : 0
+					, 'saldo'       : 0
 				}
-				, 'initialize' : function initialize()
-				{
-					this.set( 'Saldo', this.get( 'Pw' ) - this.get( 'Pl' ) );
-				}
-			} )
+		    } )
 		};
 	}
 );

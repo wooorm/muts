@@ -1,6 +1,6 @@
 define(
-	  [ 'jquery', 'lodash', 'backbone', '$tore', 'schedule.view', 'schedule.data' ]
-	, function anonymous( $, _, Backbone, $tore, view, data )
+	  [ 'jquery', 'lodash', 'backbone', '$tore', 'schedule.view' ]
+	, function anonymous( $, _, Backbone, $tore, view )
 	{
 		var exports    = this
 		  , app        = exports.app
@@ -9,8 +9,7 @@ define(
 		  ;
 
 		app.$tore.init( {
-			  'key' : 'schedule.collection.models'
-			, 'default' : data
+			'key' : 'schedule.collection.models'
 		} );
 
 		return view;

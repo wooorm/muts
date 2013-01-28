@@ -1,17 +1,12 @@
 define(
-	  [ 'jquery', 'lodash', 'backbone', '$tore', 'ranking.view', 'ranking.data' ]
-	, function anonymous( $, _, Backbone, $tore, view, data )
+	  [ 'jquery', 'lodash', 'backbone', 'ranking.view' ]
+	, function anonymous( $, _, Backbone, view )
 	{
 		var exports    = this
 		  , app        = exports.app
 		  , util       = exports.util || ( exports.util = {} )
 		  , ranking    = app.ranking || ( app.ranking = {} )
 		  ;
-
-		app.$tore.init( {
-			  'key' : 'ranking.collection.models'
-			, 'default' : data
-		} );
 
 		return view;
 	}

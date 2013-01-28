@@ -1,5 +1,5 @@
 define(
-	  [ 'jquery', 'lodash', 'backbone', '$tore', 'schedule.collection', 'showhide' ]
+	  [ 'jquery', 'lodash', 'backbone', '$tore', 'schedule.collection' ]
 	, function anonymous( $, _, Backbone, $tore, collection )
 	{
 		var exports = this;
@@ -8,26 +8,69 @@ define(
 
 		root.id = 'root_schedule';
 
-		root.innerHTML = '<header><h1><span>League: </span>AMSU - 12</h1><h2><span>Tournament: </span>Threesome</h2></header><div id="data"><div id="contacts" class="actions"><header><form id="addContact" action="#"><div id="filter"><label>Select: </label><div class="select" id="filter_select"></div></div><label for="date">Date: </label><input type="text" id="date" /> <label for="team1">Team 1: </label><input type="text" id="team1" /><br/><label for="result">Result: </label><input type="text" id="result" /> <label for="team2">Team 2: </label><input type="text" id="team2" /> <input type="submit" value="Add"/></form><hr/></header></div><table><thead><th>Time</th><th>Team 1</th><th>Points</th><th>Team 2</th><th>Remove</th></thead><tbody class="game_list"></tbody></table><script id="contactTemplate" type="text/template"><td><%= date %></td><td><%= team1 %></td><td><%= result %></td><td><%= team2 %></td><td class="button_bar"><button class="edit">Edit</button><button class="delete">Remove</button></td></script></div>'
-
-		
-
-
+		root.innerHTML = '<header><h1><span>League: </span>AMSU - 12</h1><h2><span>Tournament: </span>Threesome</h2></header><div id="data"><div id="contacts" class="actions"><header><form id="addContact" action="#"><div id="filter"><label>Select: </label><div class="select" id="filter_select"></div></div><label for="date">Date: </label><input type="text" id="date" /> <label for="team1">Team 1: </label><input type="text" id="team1" /><br/><label for="result">Result: </label><input type="text" id="result" /> <label for="team2">Team 2: </label><input type="text" id="team2" /> <input type="submit" value="Add"/></form><hr/></header></div><table><thead><th>Date</th><th>Team 1</th><th>Points</th><th>Team 2</th><th>Remove</th></thead><tbody class="game_list"></tbody></table><script id="contactTemplate" type="text/template"><td><%= datum %></td><td><a href="#/game/<%= id %>"><%= team1_naam %></a></td><td><%= team1_score %> - <%= team2_score %></td><td><%= team2_naam %></td><td class="button_bar"><button class="edit">Edit</button><button class="delete">Remove</button></td></script></div><script id="contactEditTemplate" type="text/template"><td><%= datum %></td><td><a href="#/game/<%= id %>"><%= team1_naam %></a></td><td><form action="#"><input style="display: none;" class="id" value="<%= id %>" /><input class="team1_score" value="<%= team1_score %>" /><input class="team2_score" value="<%= team2_score %>" /><button class="save">Save</button><button class="cancel">Cancel</button></form></td><td><%= team2_naam %></td></script>'
 
 		exports.app.root.appendChild( root );
 		
 		var Contact = Backbone.View.extend( {
-			  'tagName'  : 'tr'
-			, 'className': 'contact-container'
-			, 'template' : _.template( $( '#contactTemplate' ).html() )
+			  'tagName'  		: 'tr'
+			, 'className'		: 'contact-container'
+			, 'template' 		: _.template( $( '#contactTemplate' ).html() )
+			, 'editTemplate'	: _.template($("#contactEditTemplate").html())
 			, 'events' : {
-				  'click .delete': 'delete_contact'
+				  'click .delete'	: 'delete_contact'
+				, 'click .edit'		: 'editContact'
+				, 'click .save'		: 'saveEdits'
+				, 'click .cancel'	: 'cancelEdit'  
 			}
 			, 'delete_contact' : function delete_contact( event )
 			{
 				this.model.destroy();
 				this.remove();
 			}
+			, editContact: function ()
+			{
+            	// console.log('test');
+            	// console.log("edit model data:", this.model.toJSON());
+            	this.$el.html(this.editTemplate(this.model.toJSON()));
+	            this.$el.find("input[type='hidden']").remove();
+	        }
+	        , saveEdits: function (e)
+	        {
+            	e.preventDefault();
+            	// console.log("Test new game: ",formData);
+            	var formData = {},
+                prev = this.model.previousAttributes();
+                // console.log("Prev", this.model.previousAttributes());
+                // console.log("helemaal:", $(e.target).closest("form"));
+            	
+            	//get form data
+            	$(e.target).closest("form").find(":input").not("button").each(function ()
+            	{
+	                var el = $(this);
+	                formData[el.attr("class")] = el.val();
+	                // console.log("Get Form data:", formData);
+            	});
+
+            	//update model
+            	this.model.set(formData);
+            	// console.log("update model with formdata:", formData);
+            	//render view
+            	this.render();
+
+            	//update contacts array
+            	_.each(FED2.poolData, function (contact)
+            	{
+	                if (_.isEqual(contact, prev))
+	                {
+	                    FED2.poolData.splice(_.indexOf(FED2.poolData, contact), 1, formData);
+                	}
+            	});
+        	}
+        	, cancelEdit: function () 
+        	{
+            	this.render();
+        	}
 			, 'render' : function render()
 			{
 				this.el.dataset.cid = this.cid;
@@ -41,23 +84,44 @@ define(
 			, '$game_el' : $( '.game_list' )
 			, 'initialize' : function initialize( data )
 			{
+				var self = this;
 				this.collection = new collection( app.$tore.schedule.collection.models );
 
-				this.render();
+				this.collection.fetch({
+	            	'success' : function success( data )
+	            	{
+	                	// console.log(self.collection.toJSON());
+	                
+		                _.each(self.collection.models, function(model){
+		                    //set a resource uri on the model
+		                    // console.log("model data: ", model.toJSON());
+		                    // console.log("model: ", model);
+		                    model.url = model.get('resource_uri');
+		                    // console.log(model.url);
+		                } );
 
-				this.$el.find( '#filter' ).append( this.createSelect() );
+		                app.$tore.schedule.collection.models = data;
+
+		                self.render();
+						self.$el.find( '#filter' ).append( self.createSelect() );
+		            }
+		        } );
+
+				
 
 				this.on( 'change:filterType', this.filterByType, this );
 				this.collection.on( 'reset', this.render, this );
 				this.collection.on( 'add', this.renderContact, this );
 			}
-			, 'show' : function show()
+			, 'show' : function show( args )
 			{
-				this.el.style.display = '';
+				root.style.display = '';
+				return 'show:schedule:works';
 			}
 			, 'hide' : function hide()
 			{
-				this.el.style.display = 'none';
+				root.style.display = 'none';
+				return 'hide:schedule:works';
 			}
 			, 'events' : {
 				  'change #filter select': 'setFilter'
@@ -84,7 +148,7 @@ define(
 			}
 			, 'getTypes' : function getTypes()
 			{
-				return _.uniq( this.collection.pluck( 'team1' ) );
+				return _.uniq( this.collection.pluck( 'team1_naam' ) );
 			}
 			, 'createSelect' : function createSelect()
 			{
@@ -132,7 +196,7 @@ define(
 					var filterType = this.filterType
 					  , filtered = _.filter( this.collection.models, function callback( item )
 							{
-								return item.get( 'team1' ) === filterType;
+								return item.get( 'team1_naam' ) === filterType;
 							}
 						);
 
@@ -156,7 +220,7 @@ define(
 				this.collection.add( formData );
 
 				app.$tore.schedule.collection.models = this.collection.models;
-				console.log( 'a', app.$tore.schedule.collection.models.length );
+				// console.log( 'a', app.$tore.schedule.collection.models.length );
 			},
 		} );
 

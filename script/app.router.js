@@ -11,18 +11,7 @@ define(
 		var _rjs_paths = requirejs && requirejs.s ? requirejs.s.contexts._.config.paths : {};
 
 		exports.app.routes = {
-			  'default' : function _default()
-			{
-				console.log( current_view, 'schedule' );
-				this.select( current_view, 'schedule' );
-
-				return require( [ 'schedule' ], function callback( view )
-					{
-						console.log( 'default', new view() );
-					}
-				);
-			}
-			, 'not_found' : function not_found(){ console.log( 'not_found' ); }
+			'not_found' : function not_found(){ console.log( 'not_found' ); }
 		}
 
 	    var Router = Backbone.Router.extend( {
@@ -34,7 +23,7 @@ define(
 				{
 					actions    = actions.split( '/' );
 
-					var action = actions[ 0 ] || 'default'
+					var action = actions[ 0 ] || 'schedule'
 
 					return exports.app.router.view( action, actions.slice( 1 ) )
 				}
@@ -45,7 +34,7 @@ define(
 		{
 			var current_nav_element = document.querySelector( '[data-view="' + current_view + '"]' )
 			  , new_nav_element = document.querySelector( '[data-view="' + name + '"]' )
-
+			  ;
 
 			if ( current_nav_element && current_nav_element.classList )
 				current_nav_element.classList.remove( 'active' );
@@ -74,7 +63,7 @@ define(
 			{
 				return require( [ name ], function callback( view )
 					{
-						return console.log( 'require', name, views[ name ] = new view() );
+						return console.log( 'require', name, views[ name ] = new view( args ) );
 					}
 				);
 			}
