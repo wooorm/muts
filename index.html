@@ -7,7 +7,27 @@
 		<link rel="stylesheet" href="style/style.css" charset="utf-8">
 	</head>
 	<body>
-		<div class="main_nav button_bar"><a class="button" href="#/schedule/" data-view="schedule">Schedule</a><a class="button" href="#/game/" data-view="game">Game</a><a class="button" href="#/ranking/" data-view="ranking">Ranking</a></li></ol></div>
+		<div class="main_nav">
+			<div class="button_bar views"><a class="button" href="#/schedule/" data-view="schedule">Schedule</a><a class="button" href="#/ranking/" data-view="ranking">Ranking</a></div>
+			<!-- <div class="button_bar action_add"><button id="add_set" class="button">Add</button></div> -->
+			<div class="action_add_form" style="display:none">
+				<form>
+					<input type="hidden" value="" name="game_id" />
+					<fieldset class="team1">
+						<label for="team_1_score">team_1_score</label>
+						<input type="number" value="" name="team_1_score"/>
+					</fieldset>
+					<fieldset class="team2">
+						<label for="team_2_score">team_2_score</label>
+						<input type="number" value="" name="team_2_score"/>
+					</fieldset>
+					<fieldset class="submit_wrapper">
+						<button name="add_form_cancel">Cancel</button>
+						<input name="add_form_submit" type="submit" value="submit" />
+					</fieldset>
+				</form>
+			</div>
+		</div>
 		<div id="root"></div>
 	</body>
 </html>
