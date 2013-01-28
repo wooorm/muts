@@ -212,6 +212,7 @@ td, th
 	margin: 0 -1em;
 	background: url(../asset/image/728905.jpg) #728905;
 	padding: 1em 0;
+	position: relative;
 }
 
 .main_nav .button, .main_nav .button:visited
@@ -219,11 +220,56 @@ td, th
 	color: #fcf4dc;
 }
 
+.main_nav .action_add, .main_nav .views
+{
+	display: inline-block;
+}
+
+.main_nav .action_add
+{
+	position: absolute;
+	right: 1em;
+}
+
 .actions
 {
-	background: url(../asset/image/259185.jpg) #259185;
 	margin: 1em -1em;
 	padding: 1em;
 	color: #fcf4dc;
 	letter-spacing: .1em;
+}
+
+.actions, .action_add_form
+{
+	background: url(../asset/image/259185.jpg) #259185;
+}
+
+.action_add_form
+{
+	text-align: left;
+	padding: 1em;
+	color: #fcf4dc;
+	display: block;
+	position: absolute;
+	top: -2rem;
+	box-shadow: 0 0 15px 1px black;
+	left: 12.5%;
+	right: 12.5%;
+}
+
+.team1, .team2
+{
+	display: inline-block;
+	width: 49%;
+}
+
+.team2
+{
+	text-align: right;
+}
+
+.submit_wrapper
+{
+	margin: 2em .5em 1em 0;
+	text-align: right;
 }
