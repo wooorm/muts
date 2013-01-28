@@ -24,6 +24,8 @@
 				, 'schedule.model'      : 'app.schedule.model'
 				, 'schedule.view'       : 'app.schedule.view'
 
+				, 'add'                 : 'app.add'
+
 				, 'router'              : 'app.router'
 
 			  	, 'jquery'              : 'lib.jquery'
@@ -41,6 +43,17 @@
 			{
 				var app = exports.app = {};
 
+				app.api = {};
+
+				app.api.config = {
+				      'tournamentID' : 18519
+				    , 'poolID'       : 18739
+				    , 'access_token' : 'e08a55d872'
+				    , 'api_url'      : 'https://api.leaguevine.com/v1/'
+				    , 'season_id'    : 20167
+					, 'game_id'      : 88453 // "Boomsquad" vs "Beast Amsterdam"
+				}
+
 				app.$tore = new $tore();
 
 				app.version = '0.0.1';
@@ -48,6 +61,12 @@
 				app.view = {};
 
 				app.root = document.querySelector( '#root' );
+
+				require( [ 'add' ], function callback( view )
+					{
+						app.add = new view;
+					}
+				);
 
 				require( [ 'router' ] );
 			}
